@@ -29,6 +29,8 @@ setup(
             'limo_main = limo_mission.main:main',
             'mission_manager = limo_mission.main:main',
             'dock_server = limo_mission.dock_server:main',
+            'capture_goal_pose = limo_mission.capture_goal_pose:main',
+            'vision_docking_detector = limo_mission.nodes.vision_docking_node:main',
         ],
     },
 )

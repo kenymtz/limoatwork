@@ -18,6 +18,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.actions import IncludeLaunchDescription
@@ -33,11 +34,25 @@ def generate_launch_description():
     configuration_basename = LaunchConfiguration('configuration_basename',
                                                  default='limo_lds_2d.lua')
 
-    resolution = LaunchConfiguration('resolution', default='0.05')
+    resolution = LaunchConfiguration('resolution', default='0.03')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
+    open_rviz = LaunchConfiguration('open_rviz', default='true')
+    rviz_config = LaunchConfiguration('rviz_config')
+    use_scan_filter = LaunchConfiguration('use_scan_filter', default='true')
+    raw_scan_topic = LaunchConfiguration('raw_scan_topic', default='/scan')
+    filtered_scan_topic = LaunchConfiguration('filtered_scan_topic', default='/scan_filtered')
+    scan_topic = LaunchConfiguration('scan_topic', default='/scan_filtered')
 
-    rviz_config_dir = os.path.join(get_package_share_directory('limo_bringup'),
-                                   'rviz', 'demo_2d.rviz')
+    rviz_config_dir = os.path.join(
+        limo_cartographer_prefix,
+        'config_files',
+        'demo_2d.rviz'
+    )
+    laser_filters_yaml = os.path.join(
+        limo_cartographer_prefix,
+        'config_files',
+        'laser_filters.yaml'
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -52,6 +67,43 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument(
+            'open_rviz',
+            default_value='true',
+            description='Open RViz with the Cartographer map view'),
+        DeclareLaunchArgument(
+            'rviz_config',
+            default_value=rviz_config_dir,
+            description='Full path to the RViz config file'),
+        DeclareLaunchArgument(
+            'use_scan_filter',
+            default_value='true',
+            description='Start a moderate LaserScan filter from raw_scan_topic to filtered_scan_topic'),
+        DeclareLaunchArgument(
+            'raw_scan_topic',
+            default_value='/scan',
+            description='Raw LaserScan topic from the LiDAR driver'),
+        DeclareLaunchArgument(
+            'filtered_scan_topic',
+            default_value='/scan_filtered',
+            description='Filtered LaserScan topic published for SLAM'),
+        DeclareLaunchArgument(
+            'scan_topic',
+            default_value='/scan_filtered',
+            description='LaserScan topic consumed by Cartographer'),
+
+        Node(
+            package='laser_filters',
+            executable='scan_to_scan_filter_chain',
+            name='cartographer_scan_filter_chain',
+            output='screen',
+            condition=IfCondition(use_scan_filter),
+            parameters=[laser_filters_yaml],
+            remappings=[
+                ('scan', raw_scan_topic),
+                ('scan_filtered', filtered_scan_topic),
+            ]
+        ),
 
         Node(
             package='cartographer_ros',
@@ -64,7 +116,7 @@ def generate_launch_description():
                 '-configuration_basename', configuration_basename
             ],
             remappings=[
-                ('scan', '/scan')
+                ('scan', scan_topic)
             ]
         ),
 
@@ -82,6 +134,16 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/occupancy_grid.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time, 'resolution': resolution,
                               'publish_period_sec': publish_period_sec}.items(),
+        ),
+
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            condition=IfCondition(open_rviz),
+            arguments=['-d', rviz_config],
+            parameters=[{'use_sim_time': use_sim_time}],
         ),
 
     ])

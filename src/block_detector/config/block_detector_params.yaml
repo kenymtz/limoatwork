@@ -1,0 +1,57 @@
+block_detector:
+  ros__parameters:
+    color_topic: "/camera/color/image_raw"
+    depth_topic: "/camera/depth/image_raw"
+    color_info_topic: "/camera/color/camera_info"
+
+    debug_image_topic: "/block_detector/debug_image"
+    detections_topic: "/block_detector/detections"
+    masks_topic_prefix: "/block_detector/masks"
+
+    sync_queue_size: 10
+    sync_slop_seconds: 0.10
+
+    min_area_pixels: 700.0
+    max_area_pixels: 50000.0
+    min_rect_width_pixels: 14.0
+    min_rect_height_pixels: 10.0
+    max_rect_width_pixels: 640.0
+    max_rect_height_pixels: 480.0
+    min_aspect_ratio: 0.25
+    max_aspect_ratio: 4.5
+    min_rectangularity: 0.60
+    min_solidity: 0.85
+    min_color_fill_ratio: 0.60
+    border_margin_pixels: 6
+    max_detections_per_frame: 10
+
+    # ROI normalizado sobre la imagen color. Por defecto usa toda la imagen.
+    roi_x_min_norm: 0.0
+    roi_y_min_norm: 0.0
+    roi_x_max_norm: 1.0
+    roi_y_max_norm: 1.0
+
+    min_depth_m: 0.15
+    max_depth_m: 1.50
+    min_valid_depth_pixels: 40
+    depth_erosion_kernel_size: 5
+    allow_depth_resize: false
+
+    morphology_kernel_size: 5
+    morphology_open_iterations: 2
+    morphology_close_iterations: 2
+
+    size_class_tolerance_m: 0.010
+    publish_masks: false
+    draw_contour_points_in_json: true
+    max_contour_points_in_json: 80
+
+    # HSV usa la escala de OpenCV: H 0..179, S/V 0..255.
+    # Cada color se define como una lista plana de rangos:
+    # [h_min, s_min, v_min, h_max, s_max, v_max, ...]
+    hsv_ranges.marron: [5, 80, 25, 25, 255, 140]
+    hsv_ranges.verde: [35, 45, 35, 85, 255, 255]
+    hsv_ranges.amarillo: [20, 70, 70, 35, 255, 255]
+    hsv_ranges.azul: [90, 55, 35, 130, 255, 255]
+    hsv_ranges.naranja: [5, 90, 80, 20, 255, 255]
+    hsv_ranges.rojo: [0, 80, 50, 10, 255, 255, 170, 80, 50, 179, 255, 255]

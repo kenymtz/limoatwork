@@ -13,8 +13,8 @@ def generate_launch_description():
     # use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false',
     #                                          description='Use simulation clock if true')
 
-    port_name_arg = DeclareLaunchArgument('port_name', default_value='ttyUSB1',
-                                         description='usb bus name, e.g. ttyUSB1')
+    port_name_arg = DeclareLaunchArgument('port_name', default_value='ttyUSB0',
+                                         description='usb bus name, e.g. ttyUSB0')
     odom_frame_arg = DeclareLaunchArgument('odom_frame', default_value='odom',
                                            description='Odometry frame id')
     base_link_frame_arg = DeclareLaunchArgument('base_frame', default_value='base_link',

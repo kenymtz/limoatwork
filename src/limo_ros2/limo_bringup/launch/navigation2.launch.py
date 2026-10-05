@@ -20,6 +20,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -27,6 +28,10 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    rviz_config = LaunchConfiguration('rviz_config')
+    use_composition = LaunchConfiguration('use_composition')
+    use_scan_filter = LaunchConfiguration('use_scan_filter')
+    bringup_dir = get_package_share_directory('limo_bringup')
     
     # Use launch-time substitutions to ensure paths resolve to install directory
     map_dir = PathJoinSubstitution([
@@ -41,12 +46,18 @@ def generate_launch_description():
         'navigation2.yaml'
     ])
 
+    laser_filters_yaml = PathJoinSubstitution([
+        FindPackageShare('limo_bringup'),
+        'config_files',
+        'laser_filters.yaml'
+    ])
+
     nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
 
     rviz_config_dir = os.path.join(
-        get_package_share_directory('nav2_bringup'),
-        'rviz',
-        'nav2_default_view.rviz')
+        bringup_dir,
+        'config_files',
+        'limon_navigation.rviz')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -63,13 +74,38 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument(
+            'rviz_config',
+            default_value=rviz_config_dir,
+            description='Full path to the RViz config file'),
+        DeclareLaunchArgument(
+            'use_composition',
+            default_value='False',
+            description='Use composed Nav2 bringup if true'),
+        DeclareLaunchArgument(
+            'use_scan_filter',
+            default_value='true',
+            description='Publish /scan_filtered from /scan for Nav2'),
+
+        Node(
+            package='laser_filters',
+            executable='scan_to_scan_filter_chain',
+            name='nav2_scan_filter_chain',
+            output='screen',
+            condition=IfCondition(use_scan_filter),
+            parameters=[laser_filters_yaml],
+            remappings=[
+                ('scan', '/scan'),
+                ('scan_filtered', '/scan_filtered'),
+            ]),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([nav2_launch_file_dir, '/bringup_launch.py']),
             launch_arguments={
                 'map': LaunchConfiguration('map'),
                 'use_sim_time': use_sim_time,
-                'params_file': LaunchConfiguration('params_file')
+                'params_file': LaunchConfiguration('params_file'),
+                'use_composition': use_composition
              }.items(),
         ),
 
@@ -77,7 +113,7 @@ def generate_launch_description():
             package='rviz2',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', rviz_config_dir],
+            arguments=['-d', rviz_config],
             parameters=[{'use_sim_time': use_sim_time}],
             output='screen'),
     ])

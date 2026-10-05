@@ -31,8 +31,14 @@ class DockServer(Node):
         super().__init__("dock_server")
 
         self.cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.declare_parameter("scan_topic", "/scan_filtered")
+        self.scan_topic = (
+            self.get_parameter("scan_topic")
+            .get_parameter_value()
+            .string_value
+        )
         self.scan_sub = self.create_subscription(
-            LaserScan, "/scan", self._scan_cb, qos_profile_sensor_data
+            LaserScan, self.scan_topic, self._scan_cb, qos_profile_sensor_data
         )
         self._last_scan: LaserScan | None = None
 
@@ -45,7 +51,9 @@ class DockServer(Node):
             cancel_callback=self.cancel_cb,
         )
 
-        self.get_logger().info("DockServer rodando: action /dock")
+        self.get_logger().info(
+            f"DockServer rodando: action /dock, LiDAR en {self.scan_topic}"
+        )
 
     def _scan_cb(self, msg: LaserScan):
         self._last_scan = msg

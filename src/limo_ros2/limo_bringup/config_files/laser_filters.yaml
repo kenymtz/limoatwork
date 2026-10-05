@@ -1,25 +1,20 @@
-scan_to_scan_filter_chain:
+/**:
   ros__parameters:
     filter1:
-      name: range
+      name: cartographer_range_gate
       type: laser_filters/LaserScanRangeFilter
       params:
         use_message_range_limits: false
         lower_threshold: 0.12
         upper_threshold: 8.0
-        lower_replacement_value: 0.12
-        upper_replacement_value: 8.0
+        lower_replacement_value: .nan
+        upper_replacement_value: .nan
 
     filter2:
-      name: speckle
+      name: cartographer_speckle_filter
       type: laser_filters/LaserScanSpeckleFilter
       params:
         filter_type: 0
         max_range: 8.0
-        max_range_diff: 0.15
-
-    filter3:
-      name: median
-      type: laser_filters/LaserScanMedianSpatialFilter
-      params:
-        window_size: 5
+        max_range_difference: 0.15
+        filter_window: 2

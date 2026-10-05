@@ -19,6 +19,7 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     bt_xml_file = LaunchConfiguration('bt_xml_file')
     use_lifecycle_mgr = LaunchConfiguration('use_lifecycle_mgr')
+    use_scan_filter = LaunchConfiguration('use_scan_filter')
     remappings = LaunchConfiguration('remappings')
     map_subscribe_transient_local = LaunchConfiguration('map_subscribe_transient_local')
 
@@ -54,7 +55,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'params_file',
-            default_value=os.path.join(bringup_dir, 'param', 'amcl_params.yaml'),
+            default_value=os.path.join(bringup_dir, 'param', 'navigation2.yaml'),
             description='Full path to the ROS2 parameters file to use'),
         
         DeclareLaunchArgument(
@@ -69,12 +70,28 @@ def generate_launch_description():
             description='Whether to launch the lifecycle manager'),
 
         DeclareLaunchArgument(
+            'use_scan_filter', default_value='true',
+            description='Publish /scan_filtered from /scan for Nav2'),
+
+        DeclareLaunchArgument(
             'remappings', default_value='false',
             description='Arguments to pass to all nodes launched by the file'),
 
         DeclareLaunchArgument(
             'map_subscribe_transient_local', default_value='false',
             description='Whether to set the map subscriber QoS to transient local'),
+
+        Node(
+            package='laser_filters',
+            executable='scan_to_scan_filter_chain',
+            name='nav2_scan_filter_chain',
+            output='screen',
+            condition=IfCondition(use_scan_filter),
+            parameters=[os.path.join(bringup_dir, 'config_files', 'laser_filters.yaml')],
+            remappings=[
+                ('scan', '/scan'),
+                ('scan_filtered', '/scan_filtered'),
+            ]),
 
         Node(
             package='nav2_controller',

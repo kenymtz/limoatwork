@@ -22,6 +22,7 @@ def generate_launch_description():
     bt_xml_file = LaunchConfiguration('bt_xml_file')
     autostart = LaunchConfiguration('autostart')
     use_remappings = LaunchConfiguration('use_remappings')
+    use_scan_filter = LaunchConfiguration('use_scan_filter')
 
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace',
@@ -37,7 +38,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(bringup_dir, 'param', 'amcl_params.yaml'),
+        default_value=os.path.join(bringup_dir, 'param', 'navigation2.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
     declare_bt_xml_cmd = DeclareLaunchArgument(
         'bt_xml_file',
@@ -53,6 +54,10 @@ def generate_launch_description():
         'use_remappings', default_value='false',
         description='Arguments to pass to all nodes launched by the file')
 
+    declare_use_scan_filter_cmd = DeclareLaunchArgument(
+        'use_scan_filter', default_value='true',
+        description='Publish /scan_filtered from /scan for Nav2')
+
 
     start_navigation_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'limo_navigation.launch.py')),
@@ -63,6 +68,7 @@ def generate_launch_description():
                           'bt_xml_file': bt_xml_file,
                           'use_lifecycle_mgr': 'false',
                           'use_remappings': use_remappings,
+                          'use_scan_filter': use_scan_filter,
                           'map_subscribe_transient_local': 'true'}.items())
 
     start_localization_cmd = IncludeLaunchDescription(
@@ -98,10 +104,13 @@ def generate_launch_description():
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_bt_xml_cmd)
     ld.add_action(declare_use_remappings_cmd)
+    ld.add_action(declare_use_scan_filter_cmd)
     ld.add_action(start_lifecycle_manager_cmd)
     ld.add_action(start_localization_cmd)
     ld.add_action(start_navigation_cmd)
-    
+
+    return ld
+
 
 if __name__ == '__main__':
     generate_launch_description()

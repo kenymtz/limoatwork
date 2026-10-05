@@ -16,6 +16,8 @@
   <!-- Messages used -->
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
 
   <!-- Nav2 action used by the mission navigator -->
   <depend>nav2_msgs</depend>
@@ -25,6 +27,7 @@
 
   <!-- Docking geometry uses numpy -->
   <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <!-- Tests -->
   <test_depend>ament_copyright</test_depend>
